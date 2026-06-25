@@ -1,0 +1,63 @@
+name: BC Transfer Order Regression Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 'main', 'master', 'release/*', 'feature/*' ]
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/*.yaml'
+
+defaults:
+  run:
+    shell: powershell
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  transfer-order-regression-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize AL-Go workflow
+        uses: microsoft/AL-Go/Actions/WorkflowInitialize@v9.0
+        with:
+          shell: powershell
+
+      - name: Read AL-Go settings
+        uses: microsoft/AL-Go/Actions/ReadSettings@v9.0
+        with:
+          shell: powershell
+          get: type,useGitSubmodules
+
+      - name: Determine projects to build
+        id: determineProjects
+        uses: microsoft/AL-Go/Actions/DetermineProjectsToBuild@v9.0
+        with:
+          shell: powershell
+          maxBuildDepth: 1
+
+      - name: Compile extension
+        uses: microsoft/AL-Go/Actions/Build@v9.0
+        with:
+          shell: powershell
+          projectsJson: ${{ steps.determineProjects.outputs.ProjectsJson }}
+
+      - name: Run Transfer Order regression tests
+        uses: microsoft/AL-Go/Actions/RunTests@v9.0
+        with:
+          shell: powershell
+          projectsJson: ${{ steps.determineProjects.outputs.ProjectsJson }}
+          testFilter: 'Transfer Order|Post Shipment|Item Ledger Entry'
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transfer-order-test-results
+          path: '**/TestResults/**'
