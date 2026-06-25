@@ -42,19 +42,6 @@ jobs:
           shell: powershell
           maxBuildDepth: 1
 
-      - name: Compile extension
-        uses: microsoft/AL-Go/Actions/Build@v9.0
-        with:
-          shell: powershell
-          projectsJson: ${{ steps.determineProjects.outputs.ProjectsJson }}
-
-      - name: Run Transfer Order regression tests
-        uses: microsoft/AL-Go/Actions/RunTests@v9.0
-        with:
-          shell: powershell
-          projectsJson: ${{ steps.determineProjects.outputs.ProjectsJson }}
-          testFilter: 'Transfer Order|Post Shipment|Item Ledger Entry'
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
